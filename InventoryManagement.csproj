@@ -26,6 +26,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="InventoryManagement.Tests\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove=".github\*" />
   </ItemGroup>
 
