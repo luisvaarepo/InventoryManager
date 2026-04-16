@@ -6,13 +6,17 @@ namespace InventoryManagement.Data;
 
 public static class IdentityDataSeeder
 {
+    private const string SeedUserPassword = "Qwerty123#";
+    private const string AdminEmail = "admin@example.com";
+    private const string StaffEmail = "staff@example.com";
+
     /// <summary>
-    /// Seeds identity roles, assigns default staff roles, and inserts baseline supplier, category, and product records when missing.
+    /// Seeds identity roles, assigns default staff roles, creates test accounts, and inserts baseline supplier, category, and product records when missing.
     /// </summary>
     /// <param name="serviceProvider">Service provider used to resolve identity managers and application data context.</param>
     /// <returns>A task representing the asynchronous seed operation.</returns>
     /// <remarks>
-    /// Expected output: required roles exist and initial catalog data is present in an empty database.
+    /// Expected output: required roles exist, test accounts are available, and initial catalog data is present in an empty database.
     /// Possible errors: propagates data access and identity management exceptions from EF Core and ASP.NET Identity.
     /// </remarks>
     public static async Task SeedAsync(IServiceProvider serviceProvider)
@@ -28,6 +32,9 @@ public static class IdentityDataSeeder
                 await roleManager.CreateAsync(new IdentityRole(role));
             }
         }
+
+        await EnsureSeedUserAsync(userManager, AdminEmail, Roles.Manager);
+        await EnsureSeedUserAsync(userManager, StaffEmail, Roles.Staff);
 
         foreach (var user in userManager.Users)
         {
@@ -243,6 +250,59 @@ public static class IdentityDataSeeder
             );
 
             await dbContext.SaveChangesAsync();
+        }
+    }
+
+    /// <summary>
+    /// Ensures that a seeded local account exists and is assigned only to the requested application role.
+    /// </summary>
+    /// <param name="userManager">Identity user manager used to create users and manage their roles.</param>
+    /// <param name="email">Email address and username of the seeded local account.</param>
+    /// <param name="requiredRole">Application role that the seeded account must have.</param>
+    /// <returns>A task representing the asynchronous identity seed operation for the requested user.</returns>
+    /// <remarks>
+    /// Expected output: the requested local user exists and belongs to the intended role.
+    /// Possible errors: throws <see cref="InvalidOperationException"/> when user creation or role assignment fails.
+    /// </remarks>
+    private static async Task EnsureSeedUserAsync(UserManager<IdentityUser> userManager, string email, string requiredRole)
+    {
+        var user = await userManager.FindByEmailAsync(email);
+
+        if (user is null)
+        {
+            user = new IdentityUser
+            {
+                UserName = email,
+                Email = email,
+                EmailConfirmed = true
+            };
+
+            var createResult = await userManager.CreateAsync(user, SeedUserPassword);
+            if (!createResult.Succeeded)
+            {
+                throw new InvalidOperationException($"Failed to create seeded user '{email}': {string.Join("; ", createResult.Errors.Select(e => e.Description))}");
+            }
+        }
+
+        foreach (var role in Roles.All.Where(role => role != requiredRole))
+        {
+            if (await userManager.IsInRoleAsync(user, role))
+            {
+                var removeRoleResult = await userManager.RemoveFromRoleAsync(user, role);
+                if (!removeRoleResult.Succeeded)
+                {
+                    throw new InvalidOperationException($"Failed to remove role '{role}' from seeded user '{email}': {string.Join("; ", removeRoleResult.Errors.Select(e => e.Description))}");
+                }
+            }
+        }
+
+        if (!await userManager.IsInRoleAsync(user, requiredRole))
+        {
+            var addRoleResult = await userManager.AddToRoleAsync(user, requiredRole);
+            if (!addRoleResult.Succeeded)
+            {
+                throw new InvalidOperationException($"Failed to add role '{requiredRole}' to seeded user '{email}': {string.Join("; ", addRoleResult.Errors.Select(e => e.Description))}");
+            }
         }
     }
 }

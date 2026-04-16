@@ -527,6 +527,13 @@ That means first-run setup is intentionally simple.
 
 If the database is empty, initial sample data is seeded automatically on first run.
 
+### Seeded test accounts
+For testing purposes the application creates two local user accounts during seed when the database is empty:
+- `admin@example.com` / `Qwerty123#` (assigned the `Manager` role)
+- `staff@example.com` / `Qwerty123#` (assigned the `Staff` role)
+
+Use these accounts to quickly sign in and exercise manager and staff experiences.
+
 ### Testing the invoice extraction quickly
 To test the Gemini invoice workflow right away:
 1. Open `Create Purchase Order`.
