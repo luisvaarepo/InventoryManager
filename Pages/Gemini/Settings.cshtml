@@ -1,0 +1,88 @@
+@page
+@model InventoryManagement.Pages.Gemini.SettingsModel
+@{
+    ViewData["Title"] = "Gemini Settings";
+}
+
+<h1>Gemini Settings</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-success">@Model.StatusMessage</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">API Key</h5>
+        @if (Model.HasApiKey)
+        {
+            <p class="text-success">An API key is saved in the database.</p>
+        }
+        else
+        {
+            <p class="text-muted">No API key configured yet.</p>
+        }
+
+        <form method="post" asp-page-handler="SaveApiKey" class="row g-2">
+            <div class="col-md-8">
+                <input asp-for="ApiKeyInput" class="form-control" type="password" autocomplete="off" placeholder="Paste Gemini API key" />
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">Save API Key</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">Model Catalog</h5>
+        <p class="mb-2">Last refresh (UTC): @(Model.ModelsLastRefreshedUtc?.ToString("u") ?? "Never")</p>
+        <form method="post" asp-page-handler="RefreshModels">
+            <button type="submit" class="btn btn-outline-primary">Refresh Available Models</button>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">Active Model</h5>
+        @if (Model.ModelOptions.Count == 0)
+        {
+            <p class="text-muted">No models available. Refresh the model catalog first.</p>
+        }
+        else
+        {
+            <form method="post" asp-page-handler="SelectModel" class="row g-2">
+                <div class="col-md-8">
+                    <select asp-for="SelectedModel" asp-items="Model.ModelOptions" class="form-select"></select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-success w-100">Save Selected Model</button>
+                </div>
+            </form>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Invoice Extraction Prompts</h5>
+        <form method="post" asp-page-handler="SaveInvoicePrompts">
+            <div class="mb-3">
+                <label asp-for="InvoiceImageToTextPrompt" class="form-label">Step 1 Prompt (Image to Text)</label>
+                <textarea asp-for="InvoiceImageToTextPrompt" class="form-control" rows="4"></textarea>
+            </div>
+            <div class="mb-3">
+                <label asp-for="InvoiceStructuredExtractionPrompt" class="form-label">Step 2 Prompt (Text to JSON)</label>
+                <textarea asp-for="InvoiceStructuredExtractionPrompt" class="form-control" rows="5"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Prompts</button>
+        </form>
+    </div>
+</div>

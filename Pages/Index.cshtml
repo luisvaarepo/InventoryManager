@@ -1,0 +1,105 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h1 class="mb-4">Dashboard</h1>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Products</h6>
+                <h3 class="mb-0">@Model.ProductCount</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Providers</h6>
+                <h3 class="mb-0">@Model.ProviderCount</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Purchase Orders</h6>
+                <h3 class="mb-0">@Model.PurchaseOrderCount</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card h-100 border-info">
+            <div class="card-body">
+                <h6 class="text-muted">In Progress Orders</h6>
+                <h3 class="mb-0 text-info">@Model.InProgressPurchaseOrderCount</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 border-warning">
+            <div class="card-body">
+                <h6 class="text-muted">Low Stock Items</h6>
+                <h3 class="mb-0 text-warning">@Model.LowStockCount</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Low Stock Products</div>
+    <div class="card-body p-0">
+        @if (Model.LowStockProducts.Count == 0)
+        {
+            <p class="p-3 mb-0">No low stock products.</p>
+        }
+        else
+        {
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>
+                            <a asp-page="/Index" asp-route-sortOrder="@Model.NameSort" class="link-dark text-decoration-none">Name</a>
+                        </th>
+                        <th>
+                            <a asp-page="/Index" asp-route-sortOrder="@Model.ProviderSort" class="link-dark text-decoration-none">Provider</a>
+                        </th>
+                        <th>
+                            <a asp-page="/Index" asp-route-sortOrder="@Model.QuantitySort" class="link-dark text-decoration-none">Quantity</a>
+                        </th>
+                        <th>
+                            <a asp-page="/Index" asp-route-sortOrder="@Model.ThresholdSort" class="link-dark text-decoration-none">Threshold</a>
+                        </th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var product in Model.LowStockProducts)
+                {
+                    <tr>
+                        <td>
+                            <a asp-page="/Product/Details" asp-route-id="@product.Id">@product.Name</a>
+                        </td>
+                        <td>@product.Supplier?.Name</td>
+                        <td>@product.Quantity</td>
+                        <td>@product.LowStockThreshold</td>
+                        <td>
+                            @if (Model.OrderedLowStockProductIds.Contains(product.Id))
+                            {
+                                <span class="badge text-bg-info">Ordered</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-warning">Low Stock</span>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

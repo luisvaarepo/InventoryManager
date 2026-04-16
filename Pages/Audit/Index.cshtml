@@ -1,0 +1,69 @@
+@page
+@model InventoryManagement.Pages.Audit.IndexModel
+@{
+    ViewData["Title"] = "Audits";
+}
+
+<h1>Audits</h1>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-sm-8 col-md-6 col-lg-4">
+        <input name="searchTerm" value="@Model.CurrentSearch" class="form-control" placeholder="Search user, action, table, details, id, or date" />
+    </div>
+    <div class="col-auto">
+        <input type="hidden" name="sortOrder" value="@Model.CurrentSort" />
+        <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+    <div class="col-auto">
+        <a asp-page="Index" class="btn btn-outline-secondary">Clear</a>
+    </div>
+</form>
+
+<table class="table table-sm table-striped align-middle">
+    <thead>
+        <tr>
+            <th><a asp-page="Index" asp-route-sortOrder="@Model.TimestampSort" asp-route-pageNumber="1" asp-route-searchTerm="@Model.CurrentSearch" class="link-dark text-decoration-none">Timestamp (UTC)</a></th>
+            <th><a asp-page="Index" asp-route-sortOrder="@Model.UserSort" asp-route-pageNumber="1" asp-route-searchTerm="@Model.CurrentSearch" class="link-dark text-decoration-none">User</a></th>
+            <th><a asp-page="Index" asp-route-sortOrder="@Model.ActionSort" asp-route-pageNumber="1" asp-route-searchTerm="@Model.CurrentSearch" class="link-dark text-decoration-none">Action</a></th>
+            <th><a asp-page="Index" asp-route-sortOrder="@Model.TableSort" asp-route-pageNumber="1" asp-route-searchTerm="@Model.CurrentSearch" class="link-dark text-decoration-none">Table</a></th>
+            <th><a asp-page="Index" asp-route-sortOrder="@Model.RecordSort" asp-route-pageNumber="1" asp-route-searchTerm="@Model.CurrentSearch" class="link-dark text-decoration-none">Record Id</a></th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody>
+    @if (Model.Audits.Count == 0)
+    {
+        <tr>
+            <td colspan="6">No audit records found.</td>
+        </tr>
+    }
+    else
+    {
+        foreach (var audit in Model.Audits)
+        {
+            <tr>
+                <td>@audit.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                <td>@(audit.UserId ?? "-")</td>
+                <td>@(audit.Action ?? "-")</td>
+                <td>@(audit.TableName ?? "-")</td>
+                <td>@(audit.RecordId?.ToString() ?? "-")</td>
+                <td>@(audit.Details ?? "-")</td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>
+
+<div class="d-flex align-items-center gap-2">
+    <a class="btn btn-outline-secondary @(Model.HasPreviousPage ? string.Empty : "disabled")"
+       asp-page="Index"
+       asp-route-pageNumber="@(Model.CurrentPage - 1)"
+       asp-route-sortOrder="@Model.CurrentSort"
+       asp-route-searchTerm="@Model.CurrentSearch">Previous</a>
+    <span>Page @Model.CurrentPage of @Model.TotalPages</span>
+    <a class="btn btn-outline-secondary @(Model.HasNextPage ? string.Empty : "disabled")"
+       asp-page="Index"
+       asp-route-pageNumber="@(Model.CurrentPage + 1)"
+       asp-route-sortOrder="@Model.CurrentSort"
+       asp-route-searchTerm="@Model.CurrentSearch">Next</a>
+</div>

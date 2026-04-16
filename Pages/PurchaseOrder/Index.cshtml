@@ -1,0 +1,67 @@
+@page
+@model InventoryManagement.Pages.PurchaseOrder.IndexModel
+@{
+    ViewData["Title"] = "Purchase Orders";
+}
+
+<h1>Purchase Orders</h1>
+@if (User.IsInRole(Roles.Manager))
+{
+    <a asp-page="Create" class="btn btn-primary mb-3">Create Purchase Order</a>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th><a asp-page="Index" asp-route-sortOrder="@Model.OrderNumberSort" asp-route-pageNumber="1" class="link-dark text-decoration-none">Order #</a></th>
+            <th><a asp-page="Index" asp-route-sortOrder="@Model.OrderDateSort" asp-route-pageNumber="1" class="link-dark text-decoration-none">Order Date</a></th>
+            <th><a asp-page="Index" asp-route-sortOrder="@Model.SupplierSort" asp-route-pageNumber="1" class="link-dark text-decoration-none">Supplier</a></th>
+            <th><a asp-page="Index" asp-route-sortOrder="@Model.StatusSort" asp-route-pageNumber="1" class="link-dark text-decoration-none">Status</a></th>
+            <th><a asp-page="Index" asp-route-sortOrder="@Model.ProductsCountSort" asp-route-pageNumber="1" class="link-dark text-decoration-none">Products Count</a></th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @if (Model.PurchaseOrders != null && Model.PurchaseOrders.Count > 0)
+    {
+        foreach (var order in Model.PurchaseOrders)
+        {
+            <tr>
+                <td>@order.Id</td>
+                <td>@order.OrderDate.ToShortDateString()</td>
+                <td>@(order.Supplier?.Name ?? "-")</td>
+                <td>
+                    @if (order.Status == InventoryManagement.Data.PurchaseOrderStatus.InProcess)
+                    {
+                        <span class="badge text-bg-warning">In process</span>
+                    }
+                    else
+                    {
+                        <span class="badge text-bg-success">Completed</span>
+                    }
+                </td>
+                <td>@(order.PurchaseOrderProducts?.Sum(p => p.QuantityAdded) ?? 0)</td>
+                <td>
+                    <a asp-page="Details" asp-route-id="@order.Id">Details</a>
+                </td>
+            </tr>
+        }
+    }
+    else
+    {
+        <tr><td colspan="6">No purchase orders found.</td></tr>
+    }
+    </tbody>
+</table>
+
+<div class="d-flex align-items-center gap-2">
+    <a class="btn btn-outline-secondary @(Model.HasPreviousPage ? string.Empty : "disabled")"
+       asp-page="Index"
+       asp-route-pageNumber="@(Model.CurrentPage - 1)"
+       asp-route-sortOrder="@Model.CurrentSort">Previous</a>
+    <span>Page @Model.CurrentPage of @Model.TotalPages</span>
+    <a class="btn btn-outline-secondary @(Model.HasNextPage ? string.Empty : "disabled")"
+       asp-page="Index"
+       asp-route-pageNumber="@(Model.CurrentPage + 1)"
+       asp-route-sortOrder="@Model.CurrentSort">Next</a>
+</div>

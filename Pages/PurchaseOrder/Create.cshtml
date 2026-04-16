@@ -1,0 +1,216 @@
+@page
+@model InventoryManagement.Pages.PurchaseOrder.CreateModel
+@{
+    ViewData["Title"] = "Create Purchase Order";
+}
+<h1>Create Purchase Order</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-info">@Model.StatusMessage</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.GeminiDebugMessage))
+{
+    <div class="alert alert-secondary">@Model.GeminiDebugMessage</div>
+}
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">Extract from Invoice</h5>
+        <form method="post" asp-page-handler="ExtractFromInvoice" enctype="multipart/form-data" id="invoiceExtractForm">
+            <input type="hidden" asp-for="SelectedSupplierId" />
+            <input type="hidden" asp-for="OrderLinesJson" value="@System.Text.Json.JsonSerializer.Serialize(Model.OrderLines)" />
+            <input type="hidden" asp-for="UnmatchedExtractedItemsJson" value="@System.Text.Json.JsonSerializer.Serialize(Model.UnmatchedExtractedItems)" />
+            <input type="hidden" asp-for="InvoiceImageBase64" id="invoiceImageBase64" />
+            <input type="hidden" asp-for="InvoiceImageMimeType" id="invoiceImageMimeType" />
+
+            <div class="mb-3">
+                <label asp-for="InvoiceImageFile" class="form-label">Upload invoice image</label>
+                <div class="row g-2 align-items-center">
+                    <div class="col-lg-7">
+                        <input asp-for="InvoiceImageFile" type="file" class="form-control" accept="image/*" />
+                    </div>
+                    <div class="col-lg">
+                        <div class="small text-muted">Sample invoices for testing:</div>
+                        <div class="d-flex flex-wrap gap-2 mt-1">
+                            <a class="btn btn-outline-secondary btn-sm" href="~/images/Invoice1.png" target="_blank" rel="noopener">Invoice 1</a>
+                            <a class="btn btn-outline-secondary btn-sm" href="~/images/Invoice2.png" target="_blank" rel="noopener">Invoice 2</a>
+                            <a class="btn btn-outline-secondary btn-sm" href="~/images/Invoice3.png" target="_blank" rel="noopener">Invoice 3</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="mb-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="startCamera">Open Webcam</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="captureFrame">Take Picture</button>
+                    <span class="ms-2 text-muted" id="captureStatus">No picture captured.</span>
+                </div>
+                <video id="cameraPreview" width="420" height="300" autoplay playsinline class="border rounded"></video>
+                <canvas id="cameraCanvas" width="420" height="300" class="d-none"></canvas>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Extract and Prefill Order</button>
+        </form>
+    </div>
+</div>
+
+@if (Model.UnmatchedExtractedItems.Count > 0)
+{
+    <div class="card mb-3 border-warning">
+        <div class="card-body">
+            <h5 class="card-title text-warning-emphasis">Unmatched Extracted Items</h5>
+            <p class="text-muted">These invoice rows were detected by Gemini but could not be matched to an existing product yet.</p>
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Extracted Item</th>
+                        <th>Quantity</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.UnmatchedExtractedItems)
+                {
+                    <tr>
+                        <td>@item.ProductName</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.Reason</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<form method="post" asp-page-handler="SelectSupplier">
+    <div class="mb-3">
+        <label asp-for="SelectedSupplierId" class="form-label">Provider</label>
+        <select asp-for="SelectedSupplierId" class="form-select" asp-items="@(new SelectList(Model.Suppliers, "Id", "Name"))" onchange="this.form.submit()">
+            <option value="">-- Select Provider --</option>
+        </select>
+    </div>
+    <input type="hidden" asp-for="OrderLinesJson" value="@System.Text.Json.JsonSerializer.Serialize(Model.OrderLines)" />
+    <input type="hidden" asp-for="UnmatchedExtractedItemsJson" value="@System.Text.Json.JsonSerializer.Serialize(Model.UnmatchedExtractedItems)" />
+</form>
+
+@if (Model.SelectedSupplierId > 0)
+{
+    <form method="post" asp-page-handler="AddProduct">
+        <input type="hidden" asp-for="SelectedSupplierId" />
+        <input type="hidden" asp-for="OrderLinesJson" value="@System.Text.Json.JsonSerializer.Serialize(Model.OrderLines)" />
+        <input type="hidden" asp-for="UnmatchedExtractedItemsJson" value="@System.Text.Json.JsonSerializer.Serialize(Model.UnmatchedExtractedItems)" />
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="SelectedProductId" class="form-label">Product</label>
+                <select asp-for="SelectedProductId" class="form-select" asp-items="@(new SelectList(Model.SupplierProducts, "Id", "Name"))">
+                    <option value="">-- Select Product --</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="ProductQuantity" class="form-label">Quantity</label>
+                <input asp-for="ProductQuantity" class="form-control" min="1" />
+            </div>
+            <div class="col-md-3 align-self-end">
+                <button type="submit" class="btn btn-success">Add Product</button>
+            </div>
+        </div>
+    </form>
+}
+
+@if (Model.OrderLines != null && Model.OrderLines.Count > 0)
+{
+    <h4>Order Lines</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Cost</th>
+                <th>Quantity</th>
+                <th>Line Total</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var line in Model.OrderLines)
+        {
+            <tr>
+                <td>@line.ProductName</td>
+                <td>@line.Cost.ToString("C")</td>
+                <td>@line.Quantity</td>
+                <td>@line.LineTotal.ToString("C")</td>
+                <td>
+                    <form method="post" asp-page-handler="RemoveProduct">
+                        <input type="hidden" asp-for="SelectedSupplierId" />
+                        <input type="hidden" asp-for="OrderLinesJson" value="@System.Text.Json.JsonSerializer.Serialize(Model.OrderLines)" />
+                        <input type="hidden" asp-for="UnmatchedExtractedItemsJson" value="@System.Text.Json.JsonSerializer.Serialize(Model.UnmatchedExtractedItems)" />
+                        <input type="hidden" name="productId" value="@line.ProductId" />
+                        <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    <div class="mb-3">
+        <strong>Total: @Model.InvoiceTotal.ToString("C")</strong>
+    </div>
+}
+
+<form method="post" asp-page-handler="Save">
+    <input type="hidden" asp-for="SelectedSupplierId" />
+    <input type="hidden" asp-for="OrderLinesJson" value="@System.Text.Json.JsonSerializer.Serialize(Model.OrderLines)" />
+    <input type="hidden" asp-for="UnmatchedExtractedItemsJson" value="@System.Text.Json.JsonSerializer.Serialize(Model.UnmatchedExtractedItems)" />
+    <button type="submit" class="btn btn-primary">Save</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const video = document.getElementById('cameraPreview');
+            const canvas = document.getElementById('cameraCanvas');
+            const startBtn = document.getElementById('startCamera');
+            const captureBtn = document.getElementById('captureFrame');
+            const base64Input = document.getElementById('invoiceImageBase64');
+            const mimeInput = document.getElementById('invoiceImageMimeType');
+            const status = document.getElementById('captureStatus');
+            let stream;
+
+            startBtn?.addEventListener('click', async () => {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    video.srcObject = stream;
+                    status.textContent = 'Webcam ready.';
+                } catch {
+                    status.textContent = 'Unable to access webcam.';
+                }
+            });
+
+            captureBtn?.addEventListener('click', () => {
+                if (!video.srcObject) {
+                    status.textContent = 'Open webcam first.';
+                    return;
+                }
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const dataUrl = canvas.toDataURL('image/png');
+                const commaIndex = dataUrl.indexOf(',');
+                if (commaIndex < 0) {
+                    status.textContent = 'Could not capture image.';
+                    return;
+                }
+
+                base64Input.value = dataUrl.substring(commaIndex + 1);
+                mimeInput.value = 'image/png';
+                status.textContent = 'Picture captured. Ready to extract.';
+            });
+        })();
+    </script>
+}

@@ -1,0 +1,145 @@
+@page
+@model InventoryManagement.Pages.Product.IndexModel
+@{
+    ViewData["Title"] = "Products";
+}
+
+<h1>Products</h1>
+@if (User.IsInRole(Roles.Manager))
+{
+    <a asp-page="Create">Create New Product</a>
+}
+
+<form method="get" class="row g-2 align-items-end mt-2 mb-3">
+    <div class="col-md-10">
+        <label class="form-label" for="searchText">Search</label>
+        <input id="searchText"
+               name="searchText"
+               value="@Model.SearchText"
+               class="form-control"
+               placeholder="Name, description, supplier, category, or UPC" />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label" for="stockStatus">Stock status</label>
+        <select id="stockStatus" name="stockStatus" class="form-select">
+            @if (Model.StockStatus == "all")
+            {
+                <option value="all" selected>All</option>
+            }
+            else
+            {
+                <option value="all">All</option>
+            }
+
+            @if (Model.StockStatus == "lowstock")
+            {
+                <option value="lowstock" selected>Low stock</option>
+            }
+            else
+            {
+                <option value="lowstock">Low stock</option>
+            }
+
+            @if (Model.StockStatus == "ordered")
+            {
+                <option value="ordered" selected>Ordered</option>
+            }
+            else
+            {
+                <option value="ordered">Ordered</option>
+            }
+
+            @if (Model.StockStatus == "discontinued")
+            {
+                <option value="discontinued" selected>Discontinued</option>
+            }
+            else
+            {
+                <option value="discontinued">Discontinued</option>
+            }
+        </select>
+    </div>
+    <div class="col-12 d-flex gap-2">
+        <input type="hidden" name="sortOrder" value="@Model.CurrentSort" />
+        <button type="submit" class="btn btn-primary">Search</button>
+        <a asp-page="Index" class="btn btn-outline-secondary">Clear</a>
+    </div>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th><a asp-page="Index" asp-all-route-data="Model.CurrentFilterRouteValues" asp-route-sortOrder="@Model.NameSort" asp-route-pageNumber="1" class="link-dark text-decoration-none">Name</a></th>
+            <th><a asp-page="Index" asp-all-route-data="Model.CurrentFilterRouteValues" asp-route-sortOrder="@Model.DescriptionSort" asp-route-pageNumber="1" class="link-dark text-decoration-none">Description</a></th>
+            <th><a asp-page="Index" asp-all-route-data="Model.CurrentFilterRouteValues" asp-route-sortOrder="@Model.CategoriesSort" asp-route-pageNumber="1" class="link-dark text-decoration-none">Categories</a></th>
+            <th><a asp-page="Index" asp-all-route-data="Model.CurrentFilterRouteValues" asp-route-sortOrder="@Model.ProviderSort" asp-route-pageNumber="1" class="link-dark text-decoration-none">Provider</a></th>
+            <th><a asp-page="Index" asp-all-route-data="Model.CurrentFilterRouteValues" asp-route-sortOrder="@Model.UpcSort" asp-route-pageNumber="1" class="link-dark text-decoration-none">UPC</a></th>
+            <th><a asp-page="Index" asp-all-route-data="Model.CurrentFilterRouteValues" asp-route-sortOrder="@Model.CostSort" asp-route-pageNumber="1" class="link-dark text-decoration-none">Cost</a></th>
+            <th><a asp-page="Index" asp-all-route-data="Model.CurrentFilterRouteValues" asp-route-sortOrder="@Model.QuantitySort" asp-route-pageNumber="1" class="link-dark text-decoration-none">Quantity</a></th>
+            <th><a asp-page="Index" asp-all-route-data="Model.CurrentFilterRouteValues" asp-route-sortOrder="@Model.LowStockThresholdSort" asp-route-pageNumber="1" class="link-dark text-decoration-none">Low Stock Threshold</a></th>
+            <th><a asp-page="Index" asp-all-route-data="Model.CurrentFilterRouteValues" asp-route-sortOrder="@Model.StatusSort" asp-route-pageNumber="1" class="link-dark text-decoration-none">Status</a></th>
+            <th><a asp-page="Index" asp-all-route-data="Model.CurrentFilterRouteValues" asp-route-sortOrder="@Model.DateLastPurchasedSort" asp-route-pageNumber="1" class="link-dark text-decoration-none">Date Last Purchased</a></th>
+            <th><a asp-page="Index" asp-all-route-data="Model.CurrentFilterRouteValues" asp-route-sortOrder="@Model.EstimatedTimeSort" asp-route-pageNumber="1" class="link-dark text-decoration-none">Estimated Time to Receive (weeks)</a></th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model.Products)
+    {
+        <tr class="@(item.IsDiscontinued ? "table-secondary" : item.IsLowStock ? "table-warning" : string.Empty)">
+            <td>@item.Name</td>
+            <td>@item.Description</td>
+            <td>@(item.Categories.Count == 0 ? "-" : string.Join(", ", item.Categories.Select(c => c.Name)))</td>
+            <td>@item.Supplier?.Name</td>
+            <td>@item.UPC</td>
+            <td>@item.Cost</td>
+            <td>
+                @item.Quantity
+                @if (item.IsLowStock)
+                {
+                    <span class="badge text-bg-warning ms-2">Low Stock</span>
+                }
+            </td>
+            <td>@item.LowStockThreshold</td>
+            <td>
+                @if (item.IsDiscontinued)
+                {
+                    <span class="badge text-bg-secondary">Discontinued</span>
+                }
+                else if (Model.OrderedProductIds.Contains(item.Id))
+                {
+                    <span class="badge text-bg-info">Ordered</span>
+                }
+                else
+                {
+                    <span class="badge text-bg-success">Active</span>
+                }
+            </td>
+            <td>@item.DateLastPurchased?.ToShortDateString()</td>
+            <td>@item.EstimatedTimeToReceiveWeeks</td>
+            <td>
+                @if (User.IsInRole(Roles.Manager))
+                {
+                    <a asp-page="Edit" asp-route-id="@item.Id">Edit</a>
+                    <text> | </text>
+                    <a asp-page="Delete" asp-route-id="@item.Id">Delete</a>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<div class="d-flex align-items-center gap-2">
+    <a class="btn btn-outline-secondary @(Model.HasPreviousPage ? string.Empty : "disabled")"
+       asp-page="Index"
+       asp-all-route-data="Model.CurrentFilterRouteValues"
+       asp-route-pageNumber="@(Model.CurrentPage - 1)"
+       asp-route-sortOrder="@Model.CurrentSort">Previous</a>
+    <span>Page @Model.CurrentPage of @Model.TotalPages</span>
+    <a class="btn btn-outline-secondary @(Model.HasNextPage ? string.Empty : "disabled")"
+       asp-page="Index"
+       asp-all-route-data="Model.CurrentFilterRouteValues"
+       asp-route-pageNumber="@(Model.CurrentPage + 1)"
+       asp-route-sortOrder="@Model.CurrentSort">Next</a>
+</div>

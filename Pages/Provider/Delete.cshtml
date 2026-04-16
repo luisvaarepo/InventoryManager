@@ -1,0 +1,16 @@
+@page "{id:int}"
+@model InventoryManagement.Pages.Provider.DeleteModel
+@{
+    ViewData["Title"] = "Delete Supplier";
+}
+
+<h1>Delete Supplier</h1>
+<h3>Are you sure you want to delete this Supplier?</h3>
+<div>
+    <h4>@Model.Supplier.Name</h4>
+    <form method="post">
+        <input type="hidden" asp-for="Supplier.Id" />
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a asp-page="Index">Cancel</a>
+    </form>
+</div>

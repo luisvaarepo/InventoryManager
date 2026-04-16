@@ -1,0 +1,62 @@
+@page "{id:int}"
+@model InventoryManagement.Pages.Product.EditModel
+@{
+    ViewData["Title"] = "Edit Product";
+}
+
+<h1>Edit Product</h1>
+<form method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Product.Id" />
+    <div class="form-group">
+        <label asp-for="Product.Name"></label>
+        <input asp-for="Product.Name" class="form-control" />
+        <span asp-validation-for="Product.Name" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Product.Description"></label>
+        <input asp-for="Product.Description" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="SelectedCategoryIds">Categories</label>
+        <select asp-for="SelectedCategoryIds" class="form-control" asp-items="Model.CategoryOptions" multiple size="6"></select>
+        <span asp-validation-for="SelectedCategoryIds" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Product.SupplierId">Provider</label>
+        <select asp-for="Product.SupplierId" class="form-control" asp-items="Model.ProviderOptions"></select>
+        <span asp-validation-for="Product.SupplierId" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Product.UPC"></label>
+        <input asp-for="Product.UPC" class="form-control" />
+        <span asp-validation-for="Product.UPC" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Product.Cost"></label>
+        <input asp-for="Product.Cost" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="Product.Quantity"></label>
+        <input asp-for="Product.Quantity" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="Product.LowStockThreshold"></label>
+        <input asp-for="Product.LowStockThreshold" class="form-control" min="0" />
+        <span asp-validation-for="Product.LowStockThreshold" class="text-danger"></span>
+    </div>
+    <div class="form-check mt-2 mb-2">
+        <input asp-for="Product.IsDiscontinued" class="form-check-input" />
+        <label asp-for="Product.IsDiscontinued" class="form-check-label"></label>
+    </div>
+    <div class="form-group">
+        <label asp-for="Product.DateLastPurchased"></label>
+        <input asp-for="Product.DateLastPurchased" class="form-control" type="date" />
+    </div>
+    <div class="form-group">
+        <label asp-for="Product.EstimatedTimeToReceiveWeeks"></label>
+        <input asp-for="Product.EstimatedTimeToReceiveWeeks" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-page="Index">Back to List</a>
+</form>

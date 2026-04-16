@@ -1,0 +1,47 @@
+@page
+@model InventoryManagement.Pages.Provider.IndexModel
+@{
+    ViewData["Title"] = "Providers";
+}
+
+<h1>Providers</h1>
+@if (User.IsInRole(Roles.Manager))
+{
+    <a asp-page="Create">Create New Provider</a>
+}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Contact Info</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model.Providers)
+    {
+        <tr>
+            <td>@item.Name</td>
+            <td>@item.ContactInfo</td>
+            <td>
+                @if (User.IsInRole(Roles.Manager))
+                {
+                    <a asp-page="Edit" asp-route-id="@item.Id">Edit</a>
+                    <text> | </text>
+                    <a asp-page="Delete" asp-route-id="@item.Id">Delete</a>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<div class="d-flex align-items-center gap-2">
+    <a class="btn btn-outline-secondary @(Model.HasPreviousPage ? string.Empty : "disabled")"
+       asp-page="Index"
+       asp-route-pageNumber="@(Model.CurrentPage - 1)">Previous</a>
+    <span>Page @Model.CurrentPage of @Model.TotalPages</span>
+    <a class="btn btn-outline-secondary @(Model.HasNextPage ? string.Empty : "disabled")"
+       asp-page="Index"
+       asp-route-pageNumber="@(Model.CurrentPage + 1)">Next</a>
+</div>

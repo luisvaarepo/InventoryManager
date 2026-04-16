@@ -1,0 +1,78 @@
+@page
+@model InventoryManagement.Pages.PurchaseOrder.DetailsModel
+@{
+    ViewData["Title"] = "Purchase Order Details";
+}
+<h1>Purchase Order Details</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-info">@Model.StatusMessage</div>
+}
+
+@if (Model.PurchaseOrder == null)
+{
+    <div class="alert alert-warning">Purchase order not found.</div>
+}
+else
+{
+    <div class="mb-3">
+        <div><strong>Order #:</strong> @Model.PurchaseOrder.Id</div>
+        <div><strong>Order Date:</strong> @Model.PurchaseOrder.OrderDate.ToLocalTime().ToString("g")</div>
+        <div><strong>Supplier:</strong> @(Model.PurchaseOrder.Supplier?.Name ?? "-")</div>
+        <div><strong>Status:</strong> @(Model.PurchaseOrder.Status == InventoryManagement.Data.PurchaseOrderStatus.InProcess ? "In process" : "Completed")</div>
+        <div><strong>Total Quantity:</strong> @Model.TotalQuantity</div>
+    </div>
+
+    @if (Model.PurchaseOrder.Status == InventoryManagement.Data.PurchaseOrderStatus.InProcess)
+    {
+        <form method="post" asp-page-handler="Complete" class="mb-3" id="completeOrderForm">
+            <input type="hidden" name="id" value="@Model.PurchaseOrder.Id" />
+            <input type="hidden" name="addItemsToInventory" id="addItemsToInventory" value="false" />
+            <button type="submit" class="btn btn-success">Mark as Completed</button>
+        </form>
+    }
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (Model.PurchaseOrder.PurchaseOrderProducts.Count == 0)
+        {
+            <tr>
+                <td colspan="2">No products found for this purchase order.</td>
+            </tr>
+        }
+        else
+        {
+            foreach (var item in Model.PurchaseOrder.PurchaseOrderProducts)
+            {
+                <tr>
+                    <td>@(item.Product?.Name ?? $"Product #{item.ProductId}")</td>
+                    <td>@item.QuantityAdded</td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+
+    <a asp-page="Index" class="btn btn-secondary">Back to List</a>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            const form = document.getElementById('completeOrderForm');
+            const addItemsInput = document.getElementById('addItemsToInventory');
+
+            form?.addEventListener('submit', () => {
+                const shouldAddItems = window.confirm('Add all order items to inventory automatically? Click OK for Yes or Cancel for No.');
+                addItemsInput.value = shouldAddItems ? 'true' : 'false';
+            });
+        })();
+    </script>
+}

@@ -1,0 +1,21 @@
+@page
+@model InventoryManagement.Pages.Provider.CreateModel
+@{
+    ViewData["Title"] = "Create Provider";
+}
+
+<h1>Create Provider</h1>
+<form method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="form-group">
+        <label asp-for="Provider.Name"></label>
+        <input asp-for="Provider.Name" class="form-control" />
+        <span asp-validation-for="Provider.Name" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Provider.ContactInfo"></label>
+        <input asp-for="Provider.ContactInfo" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a asp-page="Index">Back to List</a>
+</form>

@@ -1,0 +1,8 @@
+namespace InventoryManagement.Services;
+
+public static class GeminiInvoicePromptDefaults
+{
+    public const string ImageToTextPrompt = "Extract all readable text from this invoice image. Preserve line breaks, table rows, headers, column names, top header text, and text placed near logos exactly as they appear. Capture every item row in order from top to bottom, including rows between other items, and do not skip faint or partially aligned middle rows. Pay special attention to vendor/provider/supplier names, company branding near the logo, and item columns such as quantity, qty, amount, units, pcs, count, description, and product name. Return plain text only.";
+
+    public const string StructuredExtractionPrompt = "You are given OCR text from an invoice. Identify the supplier name from labels such as supplier, vendor, provider, sold by, from, bill from, company, or business name. If there is no explicit label, infer the supplier from the company name, brand name, or text located in the header area near the logo. Extract every invoice line item in the same order it appears in the invoice, including middle rows between the first and last rows, and do not omit a row unless it is clearly not an item. Map product names from description or item name fields. Extract quantity from columns or labels such as quantity, qty, amount, units, unit(s), pcs, pieces, or count. Return only JSON in this exact format: {\"supplierName\":\"string\",\"items\":[{\"productName\":\"string\",\"quantity\":number}]}. Use quantity as integer >= 1. If a row has an amount column that clearly represents item count, use it as quantity. Prefer returning all detected items rather than dropping uncertain middle rows. Do not include markdown or explanations.";
+}
